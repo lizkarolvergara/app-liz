@@ -6,7 +6,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh '''
-                VERSION=$(date +%s)
+                VERSION=1.0.$BUILD_NUMBER
                 echo "module.exports = { version: \\"$VERSION\\" };" > version.js
                 
                 docker build -t app-liz:$VERSION .
