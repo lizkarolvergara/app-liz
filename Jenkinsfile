@@ -74,7 +74,9 @@ pipeline {
                 echo "🚀 Desplegando app..."
 
                 sh """
-                docker run -d -p 3001:3000 --name app-liz ${APP_NAME}:${APP_VERSION}
+                docker run -d -p 3001:3000 \
+                -e APP_VERSION=${APP_VERSION} \
+                --name app-liz ${APP_NAME}:${APP_VERSION}
                 """
             }
         }
