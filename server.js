@@ -1,6 +1,6 @@
 const mysql = require("mysql2");
 const path = require("path");
-const { version } = require("./version");
+const version = process.env.APP_VERSION 
 
 const client = require("prom-client");
 const register = new client.Registry();
