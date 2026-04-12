@@ -27,7 +27,7 @@ pipeline {
                 docker rm app-liz-green || true
 
                 echo "Levantando nueva versión (blue)..."
-                docker run -d -p 3001:3000 --name app-liz-blue app-liz:$VERSION
+                docker run -d -p 0:3000 --name app-liz-blue app-liz:$VERSION
                 '''
             }
         }
