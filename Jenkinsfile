@@ -2,6 +2,7 @@ pipeline {
     agent any
 
     stages {
+
         stage('Build') {
             steps {
                 sh '''
@@ -13,18 +14,19 @@ pipeline {
                 '''
             }
         }
-    }
 
-    stage('Run') {
-        steps {
-            sh '''
-            VERSION=$(cat version.txt)
+        stage('Run') {
+            steps {
+                sh '''
+                VERSION=$(cat version.txt)
 
-            docker stop app-liz || true
-            docker rm app-liz || true
+                docker stop app-liz || true
+                docker rm app-liz || true
 
-            docker run -d -p 3001:3000 --name app-liz app-liz:$VERSION
-            '''
+                docker run -d -p 3001:3000 --name app-liz app-liz:$VERSION
+                '''
+            }
         }
+
     }
 }
