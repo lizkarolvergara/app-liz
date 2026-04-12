@@ -20,29 +20,14 @@ pipeline {
                 sh '''
                 VERSION=$(cat version.txt)
 
-                # detectar cuál está activo
-                ACTIVE=$(docker ps --format "{{.Names}}" | grep app-liz-blue || true)
+                echo "Limpiando contenedores previos..."
+                docker stop app-liz-blue || true
+                docker rm app-liz-blue || true
+                docker stop app-liz-green || true
+                docker rm app-liz-green || true
 
-                if [ "$ACTIVE" = "app-liz-blue" ]; then
-                    NEW="green"
-                    OLD="blue"
-                    PORT=3002
-                else
-                    NEW="blue"
-                    OLD="green"
-                    PORT=3001
-                fi
-
-                echo "Levantando nueva versión en $NEW..."
-
-                docker run -d -p $PORT:3000 --name app-liz-$NEW app-liz:$VERSION
-
-                sleep 5
-
-                echo "Eliminando versión anterior..."
-
-                docker stop app-liz-$OLD || true
-                docker rm app-liz-$OLD || true
+                echo "Levantando nueva versión (blue)..."
+                docker run -d -p 3001:3000 --name app-liz-blue app-liz:$VERSION
                 '''
             }
         }
