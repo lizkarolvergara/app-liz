@@ -1,3 +1,5 @@
+const { version } = require("./version");
+
 const client = require("prom-client");
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
@@ -8,8 +10,6 @@ const httpRequestCounter = new client.Counter({
 });
 
 register.registerMetric(httpRequestCounter);
-
-
 
 
 const express = require("express");
@@ -40,7 +40,7 @@ app.post("/form", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("App funcionando");
+  res.send(`App funcionando - Versión ${version}`);
 });
 
 app.get("/metrics", async (req, res) => {
