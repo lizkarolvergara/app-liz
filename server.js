@@ -5,36 +5,48 @@ const { version } = require("./version");
 const client = require("prom-client");
 const register = new client.Registry();
 
-// 🔹 CONFIG MYSQL
-const db = mysql.createConnection({
+// 🔥 MYSQL POOL (estable)
+const db = mysql.createPool({
   host: "mysql",
   user: "root",
   password: "root",
-  database: "appdb"
+  database: "appdb",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-// 🔥 CONEXIÓN CON REINTENTO
-function connectWithRetry() {
-  db.connect((err) => {
+// 🔥 ESPERA REAL A MYSQL + CREACIÓN DE TABLA
+function initDB(retries = 15) {
+  db.query("SELECT 1", (err) => {
     if (err) {
-      console.log("⏳ MySQL no listo, reintentando en 5s...");
-      setTimeout(connectWithRetry, 5000);
-    } else {
-      console.log("✅ Conectado a MySQL");
-
-      // Crear tabla cuando conecte
-      db.query(`
-        CREATE TABLE IF NOT EXISTS registros (
-          id INT AUTO_INCREMENT PRIMARY KEY,
-          nombre VARCHAR(100),
-          producto VARCHAR(100)
-        )
-      `);
+      console.log("⏳ Esperando MySQL...");
+      if (retries > 0) {
+        return setTimeout(() => initDB(retries - 1), 3000);
+      } else {
+        return console.error("❌ MySQL no respondió");
+      }
     }
+
+    console.log("✅ MySQL listo");
+
+    db.query(`
+      CREATE TABLE IF NOT EXISTS registros (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(100),
+        producto VARCHAR(100)
+      )
+    `, (err) => {
+      if (err) {
+        console.error("❌ Error creando tabla:", err);
+      } else {
+        console.log("✅ Tabla lista");
+      }
+    });
   });
 }
 
-connectWithRetry();
+initDB();
 
 // 🔹 MÉTRICAS
 client.collectDefaultMetrics({ register });
@@ -89,7 +101,11 @@ app.post("/form", (req, res) => {
     [nombre, producto],
     (err) => {
       if (err) {
-        return res.status(500).json({ message: "Error al guardar" });
+        console.error("❌ ERROR MYSQL INSERT:", err);
+        return res.status(500).json({
+          message: "Error al guardar",
+          error: err.message
+        });
       }
 
       res.json({
@@ -106,10 +122,11 @@ app.get("/registros", (req, res) => {
 
   db.query("SELECT * FROM registros", (err, results) => {
     if (err) {
-      return res.status(500).json({ message: "Error al obtener registros" });
+      console.error("❌ ERROR SELECT:", err);
+      return res.json([]); // nunca rompe el front
     }
 
-    res.json(results);
+    res.json(results || []);
   });
 });
 

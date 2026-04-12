@@ -37,17 +37,23 @@
 
     // 🔹 cargar registros desde MySQL
     async function cargarRegistros() {
-      const res = await fetch('/registros');
-      const data = await res.json();
+        const res = await fetch('/registros');
+        const data = await res.json();
 
-      const lista = document.getElementById('lista');
-      lista.innerHTML = "";
+        const lista = document.getElementById('lista');
+        lista.innerHTML = "";
 
-      data.forEach(reg => {
-        const li = document.createElement('li');
-        li.innerText = reg.nombre + " - " + reg.producto;
-        lista.appendChild(li);
-      });
+        // 🔴 VALIDACIÓN
+        if (!Array.isArray(data)) {
+            console.error("Error:", data);
+            return;
+        }
+
+        data.forEach(reg => {
+            const li = document.createElement('li');
+            li.innerText = reg.nombre + " - " + reg.producto;
+            lista.appendChild(li);
+        });
     }
 
     // 🔹 login
