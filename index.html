@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>App Liz</title>
+</head>
+<body>
+
+  <h1>App Liz</h1>
+
+  <h2>Login</h2>
+  <input id="user" placeholder="Usuario">
+  <input id="pass" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <h2>Formulario</h2>
+  <input id="nombre" placeholder="Nombre">
+  <input id="producto" placeholder="Producto">
+  <button onclick="enviar()">Enviar</button>
+
+  <script>
+    async function login() {
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user: document.getElementById('user').value,
+          pass: document.getElementById('pass').value
+        })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+    }
+
+    async function enviar() {
+      const res = await fetch('/form', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombre: document.getElementById('nombre').value,
+          producto: document.getElementById('producto').value
+        })
+      });
+
+      const data = await res.json();
+      alert(data.message);
+    }
+  </script>
+
+</body>
+</html>

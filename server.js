@@ -1,9 +1,11 @@
+const path = require("path");
+
 const { version } = require("./version");
 
 const client = require("prom-client");
 const register = new client.Registry();
 
-// métricas por defecto (CPU, memoria, etc.)
+// métricas por defecto
 client.collectDefaultMetrics({ register });
 
 // contador de requests
@@ -18,9 +20,15 @@ const app = express();
 
 app.use(express.json());
 
+// 🔹 FRONT (index.html)
+app.get("/", (req, res) => {
+  httpRequestCounter.inc();
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
 // 🔹 LOGIN
 app.post("/login", (req, res) => {
-  httpRequestCounter.inc(); // 👈 métrica
+  httpRequestCounter.inc();
 
   const { user, pass } = req.body;
 
@@ -33,7 +41,7 @@ app.post("/login", (req, res) => {
 
 // 🔹 FORMULARIO
 app.post("/form", (req, res) => {
-  httpRequestCounter.inc(); // 👈 métrica
+  httpRequestCounter.inc();
 
   const { nombre, producto } = req.body;
 
@@ -47,14 +55,13 @@ app.post("/form", (req, res) => {
   });
 });
 
-// 🔹 HOME
-app.get("/", (req, res) => {
-  httpRequestCounter.inc(); // 👈 métrica
-
-  res.send(`App funcionando - Versión ${version}`);
+// 🔹 VERSION (endpoint adicional)
+app.get("/version", (req, res) => {
+  httpRequestCounter.inc();
+  res.send(`Versión: ${version}`);
 });
 
-// 🔹 METRICS (Prometheus)
+// 🔹 METRICS
 app.get("/metrics", async (req, res) => {
   res.set("Content-Type", register.contentType);
   res.end(await register.metrics());
