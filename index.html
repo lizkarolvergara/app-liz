@@ -28,14 +28,29 @@
   </div>
 
   <script>
-    // mostrar versión
+    // 🔹 mostrar versión
     fetch('/version')
       .then(res => res.text())
       .then(data => {
         document.getElementById('version').innerText = data;
       });
 
-    // login
+    // 🔹 cargar registros desde MySQL
+    async function cargarRegistros() {
+      const res = await fetch('/registros');
+      const data = await res.json();
+
+      const lista = document.getElementById('lista');
+      lista.innerHTML = "";
+
+      data.forEach(reg => {
+        const li = document.createElement('li');
+        li.innerText = reg.nombre + " - " + reg.producto;
+        lista.appendChild(li);
+      });
+    }
+
+    // 🔹 login
     async function login() {
       const res = await fetch('/login', {
         method: 'POST',
@@ -51,12 +66,14 @@
       if (res.status === 200) {
         document.getElementById('loginDiv').style.display = 'none';
         document.getElementById('appDiv').style.display = 'block';
+
+        cargarRegistros(); // 👈 cargar registros al entrar
       } else {
         alert(data.message);
       }
     }
 
-    // enviar formulario
+    // 🔹 enviar formulario
     async function enviar() {
       const res = await fetch('/form', {
         method: 'POST',
@@ -70,16 +87,10 @@
       const data = await res.json();
 
       if (res.status === 200) {
-        agregarRegistro(data.data);
+        cargarRegistros(); // 👈 refresca lista desde DB
       } else {
         alert(data.message);
       }
-    }
-
-    function agregarRegistro(reg) {
-      const li = document.createElement('li');
-      li.innerText = reg.nombre + " - " + reg.producto;
-      document.getElementById('lista').appendChild(li);
     }
   </script>
 

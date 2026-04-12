@@ -39,11 +39,10 @@ pipeline {
 
         stage('Clean Docker') {
             steps {
-                echo "🧹 Limpiando Docker..."
+                echo "🧹 Limpiando entorno Docker..."
 
                 sh """
-                docker stop app-liz || true
-                docker rm app-liz || true
+                docker-compose down || true
                 docker system prune -af || true
                 """
             }
@@ -71,19 +70,17 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "🚀 Desplegando app..."
+                echo "🚀 Desplegando con docker-compose..."
 
                 sh """
-                docker run -d -p 3001:3000 \
-                -e APP_VERSION=${APP_VERSION} \
-                --name app-liz ${APP_NAME}:${APP_VERSION}
+                docker-compose up -d --build
                 """
             }
         }
 
-        stage('Verify Container') {
+        stage('Verify Containers') {
             steps {
-                echo "🔍 Verificando contenedor..."
+                echo "🔍 Verificando contenedores..."
 
                 sh """
                 docker ps
@@ -98,7 +95,7 @@ pipeline {
             echo "🧹 Pipeline finalizado"
         }
         success {
-            echo "🎉 App funcionando correctamente"
+            echo "🎉 Aplicación desplegada correctamente con MySQL"
         }
         failure {
             echo "❌ Error en pipeline"
