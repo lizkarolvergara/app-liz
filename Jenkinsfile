@@ -1,36 +1,105 @@
 pipeline {
     agent any
 
+    environment {
+        APP_NAME = "app-liz"
+        APP_VERSION = "1.0.${BUILD_NUMBER}"
+    }
+
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
+
     stages {
 
-        stage('Build') {
+        stage('Checkout') {
             steps {
-                sh '''
-                VERSION=1.0.$BUILD_NUMBER
-                echo "module.exports = { version: \\"$VERSION\\" };" > version.js
-                
-                docker build -t app-liz:$VERSION .
-                echo $VERSION > version.txt
-                '''
+                echo "🔄 Clonando repositorio..."
+
+                checkout([$class: 'GitSCM',
+                    branches: [[name: 'main']],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/lizkarolvergara/app-liz.git'
+                    ]]
+                ])
             }
         }
 
-        stage('Deploy Blue-Green') {
+        stage('Verify Project Structure') {
             steps {
-                sh '''
-                VERSION=$(cat version.txt)
+                echo "📂 Verificando estructura..."
 
-                echo "Limpiando contenedores previos..."
-                docker stop app-liz-blue || true
-                docker rm app-liz-blue || true
-                docker stop app-liz-green || true
-                docker rm app-liz-green || true
-
-                echo "Levantando nueva versión (blue)..."
-                docker run -d -p 0:3000 --name app-liz-blue app-liz:$VERSION
-                '''
+                sh """
+                pwd
+                ls -la
+                """
             }
         }
 
+        stage('Clean Docker') {
+            steps {
+                echo "🧹 Limpiando Docker..."
+
+                sh """
+                docker stop app-liz || true
+                docker rm app-liz || true
+                docker system prune -af || true
+                """
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "🐳 Construyendo imagen..."
+
+                sh """
+                docker build -t ${APP_NAME}:${APP_VERSION} .
+                """
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                echo "🧪 Ejecutando tests..."
+
+                sh """
+                docker run --rm ${APP_NAME}:${APP_VERSION} npm test
+                """
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "🚀 Desplegando app..."
+
+                sh """
+                docker run -d -p 3001:3000 --name app-liz ${APP_NAME}:${APP_VERSION}
+                """
+            }
+        }
+
+        stage('Verify Container') {
+            steps {
+                echo "🔍 Verificando contenedor..."
+
+                sh """
+                docker ps
+                """
+            }
+        }
+
+    }
+
+    post {
+        always {
+            echo "🧹 Pipeline finalizado"
+        }
+        success {
+            echo "🎉 App funcionando correctamente"
+        }
+        failure {
+            echo "❌ Error en pipeline"
+        }
     }
 }
