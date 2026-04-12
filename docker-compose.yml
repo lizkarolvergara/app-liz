@@ -6,13 +6,17 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: appdb
-
+    volumes:
+      - mysql_data:/var/lib/mysql
 
   app:
     build: .
     ports:
       - "3002:3000"
     environment:
-    - APP_VERSION=${APP_VERSION}
+      - APP_VERSION=${APP_VERSION}
     depends_on:
       - mysql
+
+volumes:
+  mysql_data:
