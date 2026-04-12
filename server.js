@@ -40,7 +40,7 @@ app.post("/form", (req, res) => {
 });
 
 app.get("/", (req, res) => {
-  res.send("App funcionando 🚀");
+  res.send("App funcionando");
 });
 
 app.get("/metrics", async (req, res) => {
