@@ -6,49 +6,54 @@
 <body>
 
   <h1>App Liz</h1>
-  <h3 id="version"></h3>
+  <h3 id="version"></h3> <!-- aquí se muestra la versión de la app -->
 
-  <!-- LOGIN -->
+  <!-- sección de login -->
   <div id="loginDiv">
     <h2>Login</h2>
-    <input id="user" placeholder="Usuario">
-    <input id="pass" placeholder="Password">
-    <button onclick="login()">Login</button>
+    <input id="user" placeholder="Usuario"> <!-- input para usuario -->
+    <input id="pass" placeholder="Password"> <!-- input para contraseña -->
+    <button onclick="login()">Login</button> <!-- botón que ejecuta login -->
   </div>
 
-  <!-- APP -->
+  <!-- sección principal de la app (oculta al inicio) -->
   <div id="appDiv" style="display:none;">
     <h2>Formulario</h2>
-    <input id="nombre" placeholder="Nombre">
-    <input id="producto" placeholder="Producto">
-    <button onclick="enviar()">Enviar</button>
+    <input id="nombre" placeholder="Nombre"> <!-- nombre del usuario -->
+    <input id="producto" placeholder="Producto"> <!-- producto a registrar -->
+    <button onclick="enviar()">Enviar</button> <!-- envía datos al backend -->
 
     <h3>Registros:</h3>
-    <ul id="lista"></ul>
+    <ul id="lista"></ul> <!-- aquí se renderizan los registros -->
   </div>
 
   <script>
-    // 🔹 mostrar versión
+    // obtiene la versión desde el backend y la muestra en pantalla
     fetch('/version')
       .then(res => res.text())
       .then(data => {
         document.getElementById('version').innerText = data;
       });
 
-    // 🔹 cargar registros desde MySQL
+    // función para cargar registros desde la base de datos
     async function cargarRegistros() {
+
+        // se hace petición al endpoint /registros
         const res = await fetch('/registros');
         const data = await res.json();
 
         const lista = document.getElementById('lista');
+
+        // se limpia la lista antes de volver a renderizar
         lista.innerHTML = "";
 
-        // 🔴 VALIDACIÓN
+        // validación para asegurar que la respuesta sea un arreglo
         if (!Array.isArray(data)) {
             console.error("Error:", data);
             return;
         }
 
+        // se recorre cada registro y se agrega al DOM
         data.forEach(reg => {
             const li = document.createElement('li');
             li.innerText = reg.nombre + " - " + reg.producto;
@@ -56,8 +61,10 @@
         });
     }
 
-    // 🔹 login
+    // función de login
     async function login() {
+
+      // se envían credenciales al backend
       const res = await fetch('/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -69,18 +76,26 @@
 
       const data = await res.json();
 
+      // si el login es correcto
       if (res.status === 200) {
+
+        // se oculta el login y se muestra la app
         document.getElementById('loginDiv').style.display = 'none';
         document.getElementById('appDiv').style.display = 'block';
 
-        cargarRegistros(); // 👈 cargar registros al entrar
+        // se cargan los registros al ingresar
+        cargarRegistros();
+
       } else {
+        // muestra error si falla
         alert(data.message);
       }
     }
 
-    // 🔹 enviar formulario
+    // función para enviar datos del formulario
     async function enviar() {
+
+      // se envían los datos al backend
       const res = await fetch('/form', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,9 +107,14 @@
 
       const data = await res.json();
 
+      // si se guarda correctamente
       if (res.status === 200) {
-        cargarRegistros(); // 👈 refresca lista desde DB
+
+        // se recarga la lista desde la base de datos
+        cargarRegistros();
+
       } else {
+        // muestra error si falla
         alert(data.message);
       }
     }
