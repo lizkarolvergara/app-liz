@@ -1,11 +1,11 @@
 const mysql = require("mysql2");
 const path = require("path");
-const version = process.env.APP_VERSION 
+const version = process.env.APP_VERSION;
 
 const client = require("prom-client");
 const register = new client.Registry();
 
-// 🔥 MYSQL POOL (estable)
+// 🔥 MYSQL POOL
 const db = mysql.createPool({
   host: "mysql",
   user: "root",
@@ -16,7 +16,7 @@ const db = mysql.createPool({
   queueLimit: 0
 });
 
-// 🔥 ESPERA REAL A MYSQL + CREACIÓN DE TABLA
+// 🔥 INIT DB SOLO SI NO ES TEST
 function initDB(retries = 15) {
   db.query("SELECT 1", (err) => {
     if (err) {
@@ -46,7 +46,9 @@ function initDB(retries = 15) {
   });
 }
 
-initDB();
+if (process.env.NODE_ENV !== "test") {
+  initDB();
+}
 
 // 🔹 MÉTRICAS
 client.collectDefaultMetrics({ register });
@@ -123,7 +125,7 @@ app.get("/registros", (req, res) => {
   db.query("SELECT * FROM registros", (err, results) => {
     if (err) {
       console.error("❌ ERROR SELECT:", err);
-      return res.json([]); // nunca rompe el front
+      return res.json([]);
     }
 
     res.json(results || []);
@@ -142,7 +144,13 @@ app.get("/metrics", async (req, res) => {
   res.end(await register.metrics());
 });
 
-// 🔹 SERVER
-app.listen(3000, () => {
-  console.log("Servidor en puerto 3000");
-});
+// 🔹 SERVER (SOLO SI NO ES TEST)
+const PORT = process.env.PORT || 3000;
+
+if (process.env.NODE_ENV !== "test") {
+  app.listen(PORT, () => {
+    console.log(`Servidor en puerto ${PORT}`);
+  });
+}
+
+module.exports = app;
